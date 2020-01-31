@@ -1,2 +1,2 @@
-# sparsification
-Experiments on sparsification of word embedding
+# Sparsification
+Experiments on sparsification of word embeddings
