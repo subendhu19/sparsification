@@ -193,10 +193,6 @@ class SparseBertForSequenceClassification(BertPreTrainedModel):
         return outputs
 
 
-ALL_MODELS = sum(
-    (tuple(BertConfig.pretrained_config_archive_map.keys())), ())
-
-
 MODEL_CLASSES = {
     'bert-w-sp': (BertConfig, BertForSequenceClassificationWithSparsity, BertTokenizer),
     'bert': (BertConfig, BertForSequenceClassification, BertTokenizer),
@@ -464,8 +460,7 @@ def main():
     parser.add_argument("--data_dir", default=None, type=str, required=True,
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")
     parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
-                        help="Path to pre-trained model or shortcut name selected in the list: " + ", ".join(
-                            ALL_MODELS))
+                        help="Path to pre-trained model or shortcut name selected")
     parser.add_argument("--language", default=None, type=str, required=True,
                         help="Evaluation language. Also train language if `train_language` is set to None.")
     parser.add_argument("--train_language", default=None, type=str,
