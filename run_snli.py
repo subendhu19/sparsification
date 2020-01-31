@@ -139,7 +139,7 @@ class SparseBertForSequenceClassification(BertPreTrainedModel):
 
         self.sparse_dense = nn.Linear(sparse_config['sparse_size'], sparse_config['sparse_size'])
         self.sparse_activation = nn.Tanh()
-        self.sparse_classifier = nn.Linear(sparse_config['sparse_size'], sparse_config['num_labels'])
+        self.sparse_classifier = nn.Linear(sparse_config['sparse_size'], config.num_labels)
 
         self.init_weights()
 
