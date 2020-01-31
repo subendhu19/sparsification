@@ -557,6 +557,9 @@ def main():
     global sparse_config
     sparse_config = json.load(open(args.sparse_config))
 
+    for param in sparse_config:
+        print(param + ': ' + str(sparse_config[param]))
+
     if os.path.exists(args.output_dir) and os.listdir(
             args.output_dir) and args.do_train and not args.overwrite_output_dir:
         raise ValueError(
@@ -675,6 +678,8 @@ def main():
             result = dict((k + '_{}'.format(global_step), v) for k, v in result.items())
             results.update(result)
 
+    for item in results:
+        print(str(item) + ': ' + str(results[item]))
     return results
 
 
