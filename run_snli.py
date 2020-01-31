@@ -64,11 +64,12 @@ class BertForSequenceClassificationWithSparsity(BertPreTrainedModel):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier = nn.Linear(config.hidden_size, config.num_labels)
         
-        self.sparse_net = DenoisingAutoencoder(config.hidden_size, config.sparse_size, config.sparse_noise_std)
+        self.sparse_net = DenoisingAutoencoder(config.hidden_size, sparse_config['sparse_size'],
+                                               sparse_config['sparse_noise_std'])
         if config.sparse_net_params:
-            self.sparse_net.load_state_dict(torch.load(config.sparse_net_params))
-        self.sparsity_frac = config.sparse_frac
-        self.sparsity_imp = config.sparse_imp
+            self.sparse_net.load_state_dict(torch.load(sparse_config['sparse_net_params']))
+        self.sparsity_frac = sparse_config['sparse_frac']
+        self.sparsity_imp = sparse_config['sparse_imp']
         
         self.init_weights()
 
@@ -124,21 +125,21 @@ class SparseBertForSequenceClassification(BertPreTrainedModel):
         super().__init__(config)
         self.num_labels = config.num_labels
         self.hidden_size = config.hidden_size
-        self.sparse_size = config.sparse_size
+        self.sparse_size = sparse_config['sparse_size']
 
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classifier = nn.Linear(config.hidden_size, self.config.num_labels)
 
-        self.sparse_net = DenoisingAutoencoder(config.hidden_size, config.sparse_size, config.sparse_noise_std)
+        self.sparse_net = DenoisingAutoencoder(config.hidden_size, sparse_config['sparse_size'],
+                                               sparse_config['sparse_noise_std'])
         if config.sparse_net_params:
-            self.sparse_net.load_state_dict(torch.load(config.sparse_net_params))
-        self.sparsity_frac = config.sparse_frac
-        self.sparsity_imp = config.sparse_imp
+            self.sparse_net.load_state_dict(torch.load(sparse_config['sparse_net_params']))
+        self.sparsity_frac = sparse_config['sparse_frac']
+        self.sparsity_imp = sparse_config['sparse_imp']
 
-        self.sparse_dense = nn.Linear(self.sparse_size, self.sparse_size)
+        self.sparse_dense = nn.Linear(sparse_config['sparse_size'], sparse_config['sparse_size'])
         self.sparse_activation = nn.Tanh()
-        self.sparse_classifier = nn.Linear(self.sparse_size, self.config.num_labels)
+        self.sparse_classifier = nn.Linear(sparse_config['sparse_size'], sparse_config['num_labels'])
 
         self.init_weights()
 
@@ -553,6 +554,7 @@ def main():
 
     args = parser.parse_args()
 
+    global sparse_config
     sparse_config = json.load(open(args.sparse_config))
 
     if os.path.exists(args.output_dir) and os.listdir(
@@ -609,12 +611,7 @@ def main():
     config = config_class.from_pretrained(args.config_name if args.config_name else args.model_name_or_path,
                                           num_labels=num_labels,
                                           finetuning_task=args.task_name,
-                                          cache_dir=args.cache_dir if args.cache_dir else None,
-                                          sparse_size=sparse_config['sparse_size'],
-                                          sparse_frac=sparse_config['sparse_frac'],
-                                          sparse_imp=sparse_config['sparse_imp'],
-                                          sparse_net_params=sparse_config['sparse_net_params'],
-                                          sparse_noise_std=sparse_config['sparse_noise_std'])
+                                          cache_dir=args.cache_dir if args.cache_dir else None)
     tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
                                                 do_lower_case=args.do_lower_case,
                                                 cache_dir=args.cache_dir if args.cache_dir else None)
