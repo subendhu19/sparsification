@@ -1,0 +1,1 @@
+{"model_type": "bert-w-sp", "sparse_size": 1500, "sparse_frac": 0.05, "sparse_imp": 0.1, "sparse_noise_std": 0.4, "sparse_net_params": ""}

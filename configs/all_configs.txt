@@ -1,0 +1,6 @@
+model_type bert-w-sp sp-bert
+sparse_size 1000 1500
+sparse_frac 0.05 0.1
+sparse_imp 0.1 0.5
+sparse_noise_std 0.4 1
+prefix sparse_net_bert

@@ -1,19 +1,4 @@
-# coding=utf-8
-# Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
-# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-""" Finetuning multi-lingual models on XNLI (Bert, RoBERTA, DistilBERT, XLM).
+""" Fine-tuning models on SNLI (Bert, BertWithSparsityPenalty, SparseBertWithSparsityPenalty).
     Adapted from `examples/run_glue.py`"""
 
 from __future__ import absolute_import, division, print_function
@@ -23,6 +8,7 @@ import glob
 import logging
 import os
 import random
+import json
 
 import numpy as np
 import torch
@@ -40,10 +26,7 @@ from tqdm import tqdm, trange
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
 from transformers import (WEIGHTS_NAME, BertModel, BertPreTrainedModel,
-                          BertConfig, BertForSequenceClassification, BertTokenizer,
-                          XLMConfig, XLMForSequenceClassification, XLMTokenizer,
-                          DistilBertConfig, DistilBertForSequenceClassification, DistilBertTokenizer,
-                          RobertaConfig, RobertaForSequenceClassification, RobertaTokenizer)
+                          BertConfig, BertForSequenceClassification, BertTokenizer)
 
 from transformers import AdamW, get_linear_schedule_with_warmup
 
@@ -58,13 +41,14 @@ logger = logging.getLogger(__name__)
 
 class DenoisingAutoencoder(nn.Module):
 
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, sparse_dim=1000, noise_std=0.4):
         super(DenoisingAutoencoder, self).__init__()
-        self.hidden = nn.Linear(input_dim, 1000)
-        self.out = nn.Linear(1000, input_dim)
+        self.hidden = nn.Linear(input_dim, sparse_dim)
+        self.out = nn.Linear(sparse_dim, input_dim)
+        self.noise_std = noise_std
 
     def forward(self, x):
-        x = x + torch.normal(0, 0.4, size=x.size()).to(x.device)
+        x = x + torch.normal(0, self.noise_std, size=x.size()).to(x.device)
         h = torch.clamp(self.hidden(x), min=0, max=1)
         o = self.out(h)
         return o, h
@@ -78,12 +62,13 @@ class BertForSequenceClassificationWithSparsity(BertPreTrainedModel):
         
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classifier = nn.Linear(config.hidden_size, self.config.num_labels)
+        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
         
-        self.sparse_net = DenoisingAutoencoder(config.hidden_size)
-        self.sparse_net.load_state_dict(torch.load('sparse_net_bert.pth'))
-        self.sparsity_frac = 0.05
-        self.sparsity_imp = 0.1
+        self.sparse_net = DenoisingAutoencoder(config.hidden_size, config.sparse_size, config.sparse_noise_std)
+        if config.sparse_net_params:
+            self.sparse_net.load_state_dict(torch.load(config.sparse_net_params))
+        self.sparsity_frac = config.sparse_frac
+        self.sparsity_imp = config.sparse_imp
         
         self.init_weights()
 
@@ -115,14 +100,15 @@ class BertForSequenceClassificationWithSparsity(BertPreTrainedModel):
         pooled_output = self.dropout(pooled_output)
         logits = self.classifier(pooled_output)
 
-        outputs = (logits,) + outputs[2:]  # add hidden states and attention if they are here
+        outputs = (logits,) + outputs[2:]
 
         if labels is not None:
             loss_recon = MSELoss()
             target_sf = sparse_outputs.new_full(sparse_outputs[0].size(), fill_value=self.sparsity_frac)
-            loss = self.sparsity_imp * (loss_recon(rec_outputs, all_outputs) + torch.sum(torch.clamp((torch.mean(sparse_outputs, axis=0) - target_sf), min=0) ** 2) + torch.mean(sparse_outputs * (1 - sparse_outputs))) 
+            loss = self.sparsity_imp * (loss_recon(rec_outputs, all_outputs) +
+                                        torch.sum(torch.clamp((sparse_outputs.mean(axis=0) - target_sf), min=0)
+                                                  ** 2) + torch.mean(sparse_outputs * (1 - sparse_outputs)))
             if self.num_labels == 1:
-                #  We are doing regression
                 loss_fct = MSELoss()
                 loss += loss_fct(logits.view(-1), labels.view(-1))
             else:
@@ -130,17 +116,91 @@ class BertForSequenceClassificationWithSparsity(BertPreTrainedModel):
                 loss += loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             outputs = (loss,) + outputs
 
-        return outputs  # (loss), logits, (hidden_states), (attentions)
+        return outputs
+
+
+class SparseBertForSequenceClassification(BertPreTrainedModel):
+    def __init__(self, config):
+        super().__init__(config)
+        self.num_labels = config.num_labels
+        self.hidden_size = config.hidden_size
+        self.sparse_size = config.sparse_size
+
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.classifier = nn.Linear(config.hidden_size, self.config.num_labels)
+
+        self.sparse_net = DenoisingAutoencoder(config.hidden_size, config.sparse_size, config.sparse_noise_std)
+        if config.sparse_net_params:
+            self.sparse_net.load_state_dict(torch.load(config.sparse_net_params))
+        self.sparsity_frac = config.sparse_frac
+        self.sparsity_imp = config.sparse_imp
+
+        self.sparse_dense = nn.Linear(self.sparse_size, self.sparse_size)
+        self.sparse_activation = nn.Tanh()
+        self.sparse_classifier = nn.Linear(self.sparse_size, self.config.num_labels)
+
+        self.init_weights()
+
+    def forward(
+            self,
+            input_ids=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            inputs_embeds=None,
+            labels=None,
+    ):
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+        )
+
+        osize = outputs[0].size()
+        all_outputs = outputs[0].reshape(osize[0] * osize[1], self.hidden_size)
+        rec_outputs, sparse_outputs = self.sparse_net(all_outputs)
+
+        loss_recon = MSELoss()
+        target_sf = sparse_outputs.new_full(sparse_outputs[0].size(), fill_value=self.sparsity_frac)
+        loss = self.sparsity_imp * (loss_recon(rec_outputs, all_outputs) + torch.sum(
+            torch.clamp((sparse_outputs.mean(axis=0) - target_sf), min=0) ** 2) + torch.mean(
+            sparse_outputs * (1 - sparse_outputs)))
+
+        sparse_outputs = sparse_outputs.reshape(osize[0], osize[1], -1)
+        sp_first_token_tensor = sparse_outputs[:, 0]
+        sp_pooled_output = self.sparse_dense(sp_first_token_tensor)
+        sp_pooled_output = self.sparse_activation(sp_pooled_output)
+        sp_pooled_output = self.dropout(sp_pooled_output)
+        sp_logits = self.sparse_classifier(sp_pooled_output)
+
+        outputs = (sp_logits,) + outputs[2:]
+
+        if labels is not None:
+            if self.num_labels == 1:
+                loss_fct = MSELoss()
+                loss += loss_fct(sp_logits.view(-1), labels.view(-1))
+            else:
+                loss_fct = CrossEntropyLoss()
+                loss += loss_fct(sp_logits.view(-1, self.num_labels), labels.view(-1))
+
+        outputs = (loss,) + outputs
+
+        return outputs
+
 
 ALL_MODELS = sum(
-    (tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig, DistilBertConfig, XLMConfig, RobertaConfig)), ())
+    (tuple(BertConfig.pretrained_config_archive_map.keys())), ())
+
 
 MODEL_CLASSES = {
-    'bertsp': (BertConfig, BertForSequenceClassificationWithSparsity, BertTokenizer),
+    'bert-w-sp': (BertConfig, BertForSequenceClassificationWithSparsity, BertTokenizer),
     'bert': (BertConfig, BertForSequenceClassification, BertTokenizer),
-    'xlm': (XLMConfig, XLMForSequenceClassification, XLMTokenizer),
-    'distilbert': (DistilBertConfig, DistilBertForSequenceClassification, DistilBertTokenizer),
-    'roberta': (RobertaConfig, RobertaForSequenceClassification, RobertaTokenizer)
+    'sp-bert': (BertConfig, SparseBertForSequenceClassification, BertTokenizer)
 }
 
 
@@ -217,10 +277,8 @@ def train(args, train_dataset, model, tokenizer):
             batch = tuple(t.to(args.device) for t in batch)
             inputs = {'input_ids': batch[0],
                       'attention_mask': batch[1],
-                      'labels': batch[3]}
-            if args.model_type != 'distilbert':
-                inputs['token_type_ids'] = batch[2] if args.model_type in [
-                    'bert'] else None  # XLM, RoBERTa and DistilBERT don't use segment_ids
+                      'labels': batch[3],
+                      'token_type_ids': batch[2]}
             outputs = model(**inputs)
             loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
 
@@ -316,10 +374,8 @@ def evaluate(args, model, tokenizer, prefix=""):
             with torch.no_grad():
                 inputs = {'input_ids': batch[0],
                           'attention_mask': batch[1],
-                          'labels': batch[3]}
-                if args.model_type != 'distilbert':
-                    inputs['token_type_ids'] = batch[2] if args.model_type in [
-                        'bert'] else None  # XLM, RoBERTa and DistilBERT don't use segment_ids
+                          'labels': batch[3],
+                          'token_type_ids': batch[2]}
                 outputs = model(**inputs)
                 tmp_eval_loss, logits = outputs[:2]
 
@@ -404,11 +460,9 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
 def main():
     parser = argparse.ArgumentParser()
 
-    ## Required parameters
+    # Required parameters
     parser.add_argument("--data_dir", default=None, type=str, required=True,
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")
-    parser.add_argument("--model_type", default=None, type=str, required=True,
-                        help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
                         help="Path to pre-trained model or shortcut name selected in the list: " + ", ".join(
                             ALL_MODELS))
@@ -419,7 +473,23 @@ def main():
     parser.add_argument("--output_dir", default=None, type=str, required=True,
                         help="The output directory where the model predictions and checkpoints will be written.")
 
-    ## Other parameters
+    # parser.add_argument("--model_type", default=None, type=str, required=True,
+    #                     help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
+    # parser.add_argument("--sparse_size", default=1000, type=int,
+    #                     help="The size of the sparse embeddings.")
+    # parser.add_argument("--sparse_frac", default=0.05, type=float,
+    #                     help="The desired sparsity fraction for the sparse embeddings.")
+    # parser.add_argument("--sparse_imp", default=0.1, type=float,
+    #                     help="The coefficient of the sparsity penalty in the loss.")
+    # parser.add_argument("--sparse_net_params", default="", type=str,
+    #                     help="Path to the sparse net checkpoint")
+    # parser.add_argument("--sparse_noise_std", default=0.4, type=float,
+    #                     help="The standard deviation for the gaussian noise in the denoising autoencoder for "
+    #                          "sparsification.")
+    parser.add_argument("--sparse_config", default="configs/config_1.json", type=str,
+                        help="Path to the sparse config file")
+
+    # Other parameters
     parser.add_argument("--config_name", default="", type=str,
                         help="Pretrained config name or path if not the same as model_name")
     parser.add_argument("--tokenizer_name", default="", type=str,
@@ -485,7 +555,10 @@ def main():
     parser.add_argument('--server_port', type=str, default='', help="For distant debugging.")
     parser.add_argument('--do_test_run', action='store_true',
                         help="Does a test run with smaller train and test set")
+
     args = parser.parse_args()
+
+    sparse_config = json.load(open(args.sparse_config))
 
     if os.path.exists(args.output_dir) and os.listdir(
             args.output_dir) and args.do_train and not args.overwrite_output_dir:
@@ -536,12 +609,17 @@ def main():
     if args.local_rank not in [-1, 0]:
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
 
-    args.model_type = args.model_type.lower()
-    config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
+    sparse_config['model_type'] = sparse_config['model_type'].lower()
+    config_class, model_class, tokenizer_class = MODEL_CLASSES[sparse_config['model_type']]
     config = config_class.from_pretrained(args.config_name if args.config_name else args.model_name_or_path,
                                           num_labels=num_labels,
                                           finetuning_task=args.task_name,
-                                          cache_dir=args.cache_dir if args.cache_dir else None)
+                                          cache_dir=args.cache_dir if args.cache_dir else None,
+                                          sparse_size=sparse_config['sparse_size'],
+                                          sparse_frac=sparse_config['sparse_frac'],
+                                          sparse_imp=sparse_config['sparse_imp'],
+                                          sparse_net_params=sparse_config['sparse_net_params'],
+                                          sparse_noise_std=sparse_config['sparse_noise_std'])
     tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
                                                 do_lower_case=args.do_lower_case,
                                                 cache_dir=args.cache_dir if args.cache_dir else None)
