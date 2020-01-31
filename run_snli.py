@@ -66,7 +66,7 @@ class BertForSequenceClassificationWithSparsity(BertPreTrainedModel):
         
         self.sparse_net = DenoisingAutoencoder(config.hidden_size, sparse_config['sparse_size'],
                                                sparse_config['sparse_noise_std'])
-        if config.sparse_net_params:
+        if sparse_config['sparse_net_params']:
             self.sparse_net.load_state_dict(torch.load(sparse_config['sparse_net_params']))
         self.sparsity_frac = sparse_config['sparse_frac']
         self.sparsity_imp = sparse_config['sparse_imp']
@@ -132,7 +132,7 @@ class SparseBertForSequenceClassification(BertPreTrainedModel):
 
         self.sparse_net = DenoisingAutoencoder(config.hidden_size, sparse_config['sparse_size'],
                                                sparse_config['sparse_noise_std'])
-        if config.sparse_net_params:
+        if sparse_config['sparse_net_params']:
             self.sparse_net.load_state_dict(torch.load(sparse_config['sparse_net_params']))
         self.sparsity_frac = sparse_config['sparse_frac']
         self.sparsity_imp = sparse_config['sparse_imp']
