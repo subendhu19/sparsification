@@ -251,6 +251,7 @@ def main():
         model = BertForSequenceClassificationWithSparsity.from_pretrained(pretrained_folder)
     else:
         model = SparseBertForSequenceClassification.from_pretrained(pretrained_folder)
+    model.to(args.device)
     model.eval()
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
