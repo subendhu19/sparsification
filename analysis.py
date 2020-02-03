@@ -224,6 +224,7 @@ def main():
     args = parser.parse_args()
     args.task_name = 'xnli'
     args.do_lower_case = True
+    args.n_gpu = torch.cuda.device_count()
 
     # Best performing config on test: acc 91.05
     config = 50
