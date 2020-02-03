@@ -3,6 +3,10 @@ from torch import nn
 import json
 from transformers import BertTokenizer, BertPreTrainedModel, BertModel
 from torch.nn import CrossEntropyLoss, MSELoss
+import argparse
+from run_snli import load_and_cache_examples
+from torch.utils.data import (DataLoader, SequentialSampler,
+                              TensorDataset)
 
 
 class DenoisingAutoencoder(nn.Module):
@@ -207,7 +211,22 @@ class SparseBertForSequenceClassification(BertPreTrainedModel):
 
 
 def main():
-    config = 1
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_dir", default='/mnt/nfs/work1/mfiterau/brawat/snli/data/snli_1.0', type=str, required=True,
+                        help="The input data dir. Should contain the .tsv files (or other data files) for the task.")
+    parser.add_argument("--per_gpu_train_batch_size", default=20, type=int,
+                        help="Batch size per GPU/CPU for training.")
+    parser.add_argument("--per_gpu_eval_batch_size", default=20, type=int,
+                        help="Batch size per GPU/CPU for evaluation.")
+    parser.add_argument("--max_seq_length", default=200, type=int,
+                        help="The maximum total input sequence length after tokenization. Sequences longer "
+                             "than this will be truncated, sequences shorter will be padded.")
+    args = parser.parse_args()
+    args.task_name = 'xnli'
+    args.do_lower_case = True
+
+    # Best performing config on test: acc 91.05
+    config = 50
 
     global sparse_config
     sparse_config = json.load(open('configs/config{}.json'.format(str(config))))
@@ -221,9 +240,24 @@ def main():
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
     # Get the actual dataset or examples
-    input_ids = torch.tensor([tokenizer.encode('this is it'), tokenizer.encode('this is not')])
+    # input_ids = torch.tensor([tokenizer.encode('this is it'), tokenizer.encode('this is not')])
 
-    print(model.get_sparse_embeddings(input_ids))
+    args.eval_batch_size = args.per_gpu_eval_batch_size * max(1, args.n_gpu)
+    eval_dataset = load_and_cache_examples(args, 'xnli', tokenizer, evaluate=True)
+    eval_sampler = SequentialSampler(eval_dataset)
+    eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size)
+    for batch in eval_dataloader:
+        batch = tuple(t.to(args.device) for t in batch)
+
+        with torch.no_grad():
+            inputs = {'input_ids': batch[0],
+                      'attention_mask': batch[1],
+                      'labels': batch[3],
+                      'token_type_ids': batch[2]}
+            outputs = model.get_sparse_embeddings(**inputs)
+            print(outputs.size())
+
+    # print(model.get_sparse_embeddings(input_ids))
 
 
 if __name__ == "__main__":
