@@ -274,7 +274,7 @@ def main():
                       'token_type_ids': batch[2]}
             outputs = model.get_sparse_embeddings(**inputs)
             print(outputs.size())
-            import ipdb; ipdb.set_trace()
+        import ipdb; ipdb.set_trace()
 
     # print(model.get_sparse_embeddings(input_ids))
 

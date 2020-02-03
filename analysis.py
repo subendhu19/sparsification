@@ -246,6 +246,7 @@ def main():
 
     global sparse_config
     sparse_config = json.load(open('configs/config{}.json'.format(str(config))))
+    sparse_config['sparse_net_params'] = '/mnt/nfs/scratch1/srongali/sparsification/sparse_net_bert_1500.pth'
     pretrained_folder = '/mnt/nfs/scratch1/srongali/sparsification/snli_exps/config_{}/checkpoint-15000'.format(str(config))
     if config <= 32:
         model = BertForSequenceClassificationWithSparsity.from_pretrained(pretrained_folder)
