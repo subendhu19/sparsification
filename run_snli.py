@@ -73,6 +73,29 @@ class BertForSequenceClassificationWithSparsity(BertPreTrainedModel):
         
         self.init_weights()
 
+    def get_sparse_embeddings(
+            self,
+            input_ids=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            inputs_embeds=None
+    ):
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+        )
+
+        osize = outputs[0].size()
+        all_outputs = outputs[0].reshape(osize[0] * osize[1], self.hidden_size)
+        _, sparse_outputs = self.sparse_net(all_outputs)
+        return sparse_outputs.reshape(osize[0], osize[1], -1)
+
     def forward(
         self,
         input_ids=None,
@@ -142,6 +165,29 @@ class SparseBertForSequenceClassification(BertPreTrainedModel):
         self.sparse_classifier = nn.Linear(sparse_config['sparse_size'], config.num_labels)
 
         self.init_weights()
+
+    def get_sparse_embeddings(
+            self,
+            input_ids=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            inputs_embeds=None
+    ):
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+        )
+
+        osize = outputs[0].size()
+        all_outputs = outputs[0].reshape(osize[0] * osize[1], self.hidden_size)
+        _, sparse_outputs = self.sparse_net(all_outputs)
+        return sparse_outputs.reshape(osize[0], osize[1], -1)
 
     def forward(
             self,
