@@ -217,7 +217,7 @@ def main():
     else:
         model = SparseBertForSequenceClassification.from_pretrained(pretrained_folder)
 
-    tokenizer = BertTokenizer.from_pretrained(pretrained_folder)
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     input_ids = torch.tensor([tokenizer.encode('this is it'), tokenizer.encode('this is not')])
 
     print(model.get_sparse_embeddings(input_ids))
