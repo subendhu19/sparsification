@@ -212,7 +212,7 @@ class SparseBertForSequenceClassification(BertPreTrainedModel):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_dir", default='/mnt/nfs/work1/mfiterau/brawat/snli/data/snli_1.0', type=str, required=True,
+    parser.add_argument("--data_dir", default='/mnt/nfs/work1/mfiterau/brawat/snli/data/snli_1.0', type=str,
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")
     parser.add_argument("--per_gpu_train_batch_size", default=20, type=int,
                         help="Batch size per GPU/CPU for training.")
