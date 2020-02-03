@@ -227,6 +227,8 @@ def main():
     args.n_gpu = torch.cuda.device_count()
     args.language = 'english'
     args.local_rank = -1
+    args.model_name_or_path = 'bert-base-uncased'
+    args.overwrite_cache = False
     # Best performing config on test: acc 91.05
     config = 50
 
