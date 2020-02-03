@@ -225,7 +225,8 @@ def main():
     args.task_name = 'xnli'
     args.do_lower_case = True
     args.n_gpu = torch.cuda.device_count()
-
+    args.language = 'english'
+    args.local_rank = -1
     # Best performing config on test: acc 91.05
     config = 50
 
