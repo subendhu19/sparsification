@@ -14,7 +14,7 @@ sparse_embeds = torch.tensor(outputs[2])
 
 
 for ind, inp in enumerate(input):
-    tmp_tokens = [tokenizer._convert_id_to_token(x) for x in input[0].tolist()]
+    tmp_tokens = [tokenizer._convert_id_to_token(x) for x in inp.tolist()]
     tmp_tokens = [x for x in tmp_tokens if(x!='[PAD]')]
     actual_str = tokenizer.convert_tokens_to_string(tmp_tokens)
     tmp_embeds = sparse_embeds[ind]
