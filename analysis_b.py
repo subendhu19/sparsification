@@ -267,6 +267,7 @@ def main():
     eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size)
     for batch in eval_dataloader:
         batch = tuple(t.to(args.device) for t in batch)
+        import ipdb; ipdb.set_trace
 
         with torch.no_grad():
             inputs = {'input_ids': batch[0],
@@ -274,7 +275,8 @@ def main():
                       'token_type_ids': batch[2]}
             outputs = model.get_sparse_embeddings(**inputs)
             print(outputs.size())
-        import ipdb; ipdb.set_trace()
+
+        ipdb.set_trace()
 
     # print(model.get_sparse_embeddings(input_ids))
 
