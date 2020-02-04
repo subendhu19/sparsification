@@ -28,13 +28,13 @@ for ind, inp in enumerate(input):
     max_idx = np.argmax(cls_embed.tolist())
     cnt = [1 for x in cls_embed.tolist() if(x == cls_embed[max_idx])]
     logger.info('=='*10)
-    print('=='*10)
+    # print('=='*10)
     logger.info('Actual Datapoint: %s', actual_str)
-    print('Actual Datapoint: ', actual_str)
-    print('Gold Label: ', labels[ind])
-    print('Max Index: ', max_idx)
-    print('Max Val: ', cls_embed[max_idx])
-    print('Dimensions with same val: ', len(cnt))
+    # print('Actual Datapoint: ', actual_str)
+    # print('Gold Label: ', labels[ind])
+    # print('Max Index: ', max_idx)
+    # print('Max Val: ', cls_embed[max_idx])
+    # print('Dimensions with same val: ', len(cnt))
     # print('Dimensions with same val: ', np.sum(cnt)/len(cls_embed.tolist()))
 
     closest_words = []
@@ -45,8 +45,8 @@ for ind, inp in enumerate(input):
         if idx == 0:
             continue
         closest_words.append((token, cos_[idx]))
-    print('Closest words: ')
+    # print('Closest words: ')
     # print('=='*10)
     closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)
-    for i in closest_list:
-        print(i)
+    # for i in closest_list:
+        # print(i)
