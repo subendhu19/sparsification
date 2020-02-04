@@ -2,6 +2,7 @@ import pickle
 from transformers import BertTokenizer, BertPreTrainedModel, BertModel
 import numpy as np
 import torch
+import logging
 
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 
@@ -12,6 +13,8 @@ input = torch.tensor(outputs[0])
 labels = outputs[1]
 sparse_embeds = torch.tensor(outputs[2])
 
+
+logger = logging.getLogger(__name__)
 
 for ind, inp in enumerate(input):
     tmp_tokens = [tokenizer._convert_id_to_token(x) for x in inp.tolist()]
@@ -24,8 +27,11 @@ for ind, inp in enumerate(input):
     # import ipdb; ipdb.set_trace()
     max_idx = np.argmax(cls_embed.tolist())
     cnt = [1 for x in cls_embed.tolist() if(x == cls_embed[max_idx])]
+    logger.info('=='*10)
     print('=='*10)
+    logger.info('Actual Datapoint: %s', actual_str)
     print('Actual Datapoint: ', actual_str)
+    print('Gold Label: ', labels[ind])
     print('Max Index: ', max_idx)
     print('Max Val: ', cls_embed[max_idx])
     print('Dimensions with same val: ', len(cnt))
