@@ -28,7 +28,8 @@ for ind, inp in enumerate(input):
     print('Actual Datapoint: ', actual_str)
     print('Max Index: ', max_idx)
     print('Max Val: ', cls_embed[max_idx])
-    print('Dimensions with same val: ', np.sum(cnt)/len(cls_embed.tolist()))
+    print('Dimensions with same val: ', len(cnt))
+    # print('Dimensions with same val: ', np.sum(cnt)/len(cls_embed.tolist()))
 
     closest_words = []
     cos_ = cosine_similarity(tmp_embeds)
