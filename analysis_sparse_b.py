@@ -21,18 +21,21 @@ for ind, inp in enumerate(input):
     tmp_embeds = tmp_embeds[:len(tmp_tokens)]
     cls_embed = tmp_embeds[0]
 
-    import ipdb; ipdb.set_trace()
+    # import ipdb; ipdb.set_trace()
     max_idx = np.argmax(cls_embed.tolist())
     cnt = [1 for x in cls_embed.tolist() if(x == cls_embed[max_idx])]
     print('=='*10)
     print('Actual Datapoint: ', actual_str)
     print('Max Index: ', max_idx)
     print('Max Val: ', cls_embed[max_idx])
-    print('Dimensions with same val: ', )
+    print('Dimensions with same val: ', np.sum(cnt)/len(cls_embed.tolist()))
 
     closest_words = []
+    cos_ = cosine_similarity(tmp_embeds)
+    cos_ = cos_[0, :].tolist()
     for idx, token in enumerate(tmp_tokens):
-        closest_words.append((token, tmp_embeds[idx].tolist()[max_idx]))
+        # closest_words.append((token, tmp_embeds[idx].tolist()[max_idx]))
+        closest_words.append((token, cos_[idx]))
     print('Closest words: ')
     # print('=='*10)
     closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)
