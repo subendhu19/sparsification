@@ -36,6 +36,8 @@ for ind, inp in enumerate(input):
     cos_ = cos_[0, :].tolist()
     for idx, token in enumerate(tmp_tokens):
         # closest_words.append((token, tmp_embeds[idx].tolist()[max_idx]))
+        if idx == 0:
+            continue
         closest_words.append((token, cos_[idx]))
     print('Closest words: ')
     # print('=='*10)
