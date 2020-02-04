@@ -51,8 +51,8 @@ class SnliProcessor(DataProcessor):
         lines = [x for x in lines if (x['gold_label'] != '-')]
         examples = []
         for (i, line) in enumerate(lines):
-            if i == 0:
-                continue
+            # if i == 0:
+            #     continue
             # language = line[0]
             # if language != self.language:
             #     continue
