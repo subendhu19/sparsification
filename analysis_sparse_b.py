@@ -14,7 +14,7 @@ def main():
     #                     datefmt='%m/%d/%Y %H:%M:%S',
     #                     level=logging.INFO)
 
-    logging.basicConfig(format='-> %(message)s',
+    logging.basicConfig(format='%(message)s',
                         level=logging.INFO)
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -37,14 +37,12 @@ def main():
         max_idx = np.argmax(cls_embed.tolist())
         cnt = [1 for x in cls_embed.tolist() if(x == cls_embed[max_idx])]
         logger.info('=='*10)
-        # print('=='*10)
-        logger.info('Actual Datapoint: %s', actual_str)
-        # print('Actual Datapoint: ', actual_str)
-        # print('Gold Label: ', labels[ind])
-        # print('Max Index: ', max_idx)
-        # print('Max Val: ', cls_embed[max_idx])
-        # print('Dimensions with same val: ', len(cnt))
-        # print('Dimensions with same val: ', np.sum(cnt)/len(cls_embed.tolist()))
+        logger.info('Actual Datapoint: ', actual_str)
+        logger.info('Gold Label: ', labels[ind])
+        logger.info('Max Index: ', max_idx)
+        logger.info('Max Val: ', cls_embed[max_idx])
+        logger.info('Dimensions with same val: ', len(cnt))
+        # logger.info('Dimensions with same val: ', np.sum(cnt)/len(cls_embed.tolist()))
 
         closest_words = []
         cos_ = cosine_similarity(tmp_embeds)
@@ -54,11 +52,10 @@ def main():
             if idx == 0:
                 continue
             closest_words.append((token, cos_[idx]))
-        # print('Closest words: ')
-        # print('=='*10)
+        print('Closest words: ')
         closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)
-        # for i in closest_list:
-            # print(i)
+        for i in closest_list:
+            logger.info(i)
 
 if __name__ == "__main__":
     main()
