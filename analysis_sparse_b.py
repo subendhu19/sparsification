@@ -25,7 +25,7 @@ for ind, inp in enumerate(input):
     print('Max Val: ', cls_embed[max_idx])
 
     closest_words = []
-    for idx, token in tmp_tokens:
+    for idx, token in enumerate(tmp_tokens):
         closest_words.append((token, tmp_embeds[idx].tolist()[max_idx]))
     print('Closest words: ')
     # print('=='*10)
