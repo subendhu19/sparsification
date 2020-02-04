@@ -1,7 +1,7 @@
 import pickle
 from transformers import BertTokenizer, BertPreTrainedModel, BertModel
 import numpy as np
-
+import torch
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 outputs = pickle.load(open('/mnt/nfs/work1/mfiterau/brawat/bionlp/sparsification/sparsification/outputs_b.pkl', 'rb'))
