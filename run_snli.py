@@ -38,7 +38,6 @@ from transformers import glue_convert_examples_to_features as convert_examples_t
 
 logger = logging.getLogger(__name__)
 
-
 class DenoisingAutoencoder(nn.Module):
 
     def __init__(self, input_dim, sparse_dim=1000, noise_std=0.4):
