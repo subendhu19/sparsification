@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
+                        datefmt='%m/%d/%Y %H:%M:%S',
+                        level=logging.INFO)
+    # logger.warning("Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s",
+    #                args.local_rank, device, args.n_gpu, bool(args.local_rank != -1), args.fp16)
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     outputs = pickle.load(
         open('/mnt/nfs/work1/mfiterau/brawat/bionlp/sparsification/sparsification/outputs_b.pkl', 'rb'))
