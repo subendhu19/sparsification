@@ -3,6 +3,8 @@ from transformers import BertTokenizer, BertPreTrainedModel, BertModel
 import numpy as np
 import torch
 
+from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
+
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 outputs = pickle.load(open('/mnt/nfs/work1/mfiterau/brawat/bionlp/sparsification/sparsification/outputs_b.pkl', 'rb'))
 
@@ -18,11 +20,15 @@ for ind, inp in enumerate(input):
     tmp_embeds = sparse_embeds[ind]
     tmp_embeds = tmp_embeds[:len(tmp_tokens)]
     cls_embed = tmp_embeds[0]
+
+    import ipdb; ipdb.set_trace()
     max_idx = np.argmax(cls_embed.tolist())
+    cnt = [1 for x in cls_embed.tolist() if(x == cls_embed[max_idx])]
     print('=='*10)
     print('Actual Datapoint: ', actual_str)
     print('Max Index: ', max_idx)
     print('Max Val: ', cls_embed[max_idx])
+    print('Dimensions with same val: ', )
 
     closest_words = []
     for idx, token in enumerate(tmp_tokens):
