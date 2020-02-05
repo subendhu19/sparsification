@@ -37,11 +37,11 @@ def main():
         max_idx = np.argmax(cls_embed.tolist())
         cnt = [1 for x in cls_embed.tolist() if(x == cls_embed[max_idx])]
         logger.info('=='*10)
-        logger.info('Actual Datapoint: ', actual_str)
-        logger.info('Gold Label: ', labels[ind])
-        logger.info('Max Index: ', max_idx)
-        logger.info('Max Val: ', cls_embed[max_idx])
-        logger.info('Dimensions with same val: ', len(cnt))
+        logger.info('Actual Datapoint: %s', actual_str)
+        logger.info('Gold Label: %s', labels[ind])
+        logger.info('Max Index: %s', max_idx)
+        logger.info('Max Val: %s', cls_embed[max_idx])
+        logger.info('Dimensions with same val: %s', len(cnt))
         # logger.info('Dimensions with same val: ', np.sum(cnt)/len(cls_embed.tolist()))
 
         closest_words = []
@@ -52,7 +52,7 @@ def main():
             if idx == 0:
                 continue
             closest_words.append((token, cos_[idx]))
-        print('Closest words: ')
+        logger.info('Closest words: ')
         closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)
         for i in closest_list:
             logger.info(i)
