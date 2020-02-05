@@ -25,6 +25,8 @@ def main():
     labels = outputs[1]
     sparse_embeds = torch.tensor(outputs[2])
 
+    import ipdb; ipdb.set_trace()
+
     for ind, inp in enumerate(input):
         tmp_tokens = [tokenizer._convert_id_to_token(x) for x in inp.tolist()]
         tmp_tokens = [x for x in tmp_tokens if(x!='[PAD]')]
