@@ -49,6 +49,7 @@ def main():
         closest_words = []
         cos_all = cosine_similarity(tmp_embeds)
         for ind_token, curr_token in enumerate(tmp_tokens):
+            logger.info('---')
             logger.info('Inspected Token: %s', curr_token)
             cos_ = cos_all[ind_token, :].tolist()
             for idx, token in enumerate(tmp_tokens):
@@ -57,9 +58,11 @@ def main():
                     continue
                 closest_words.append((token, cos_[idx]))
             logger.info('Closest words: ')
-            closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)[:3]
+            closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)[:5]
             for i in closest_list:
-                logger.info(i)
+                if i != '[SEP]' or i != 'a' or i != 'the':
+                    logger.info(i)
+
 
 if __name__ == "__main__":
     main()
