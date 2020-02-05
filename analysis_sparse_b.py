@@ -49,7 +49,7 @@ def main():
         closest_words = []
         cos_all = cosine_similarity(tmp_embeds)
         for ind_token, curr_token in enumerate(tmp_tokens):
-            if curr_token != 'a' and curr_token != 'the':
+            if curr_token != 'a' and curr_token != 'the' and curr_token != '.':
                 logger.info('---')
                 logger.info('Inspected Token: %s', curr_token)
                 cos_ = cos_all[ind_token, :].tolist()
