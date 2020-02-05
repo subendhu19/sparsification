@@ -60,7 +60,7 @@ def main():
             logger.info('Closest words: ')
             closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)[:5]
             for i in closest_list:
-                if i != '[SEP]' or i != 'a' or i != 'the':
+                if i[0] != '[SEP]' or i[0] != 'a' or i[0] != 'the':
                     logger.info(i)
 
 
