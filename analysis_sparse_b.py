@@ -46,7 +46,6 @@ def main():
         logger.info('Dimensions with same val: %s', len(cnt))
         # logger.info('Dimensions with same val: ', np.sum(cnt)/len(cls_embed.tolist()))
 
-
         cos_all = cosine_similarity(tmp_embeds)
         for ind_token, curr_token in enumerate(tmp_tokens):
             closest_words = []
@@ -64,8 +63,8 @@ def main():
                 # logger.info('Closest list: %s', closest_list)
                 cnt_ = 0
                 for i in closest_list:
-                    # if i[0] != '[SEP]' and i[0] != 'a' and i[0] != 'the' and i[0] != '.':
-                    if i[0] != 'a' and i[0] != 'the' and i[0] != '.':
+                    if i[0] != '[SEP]' and i[0] != 'a' and i[0] != 'the' and i[0] != '.':
+                    # if i[0] != 'a' and i[0] != 'the' and i[0] != '.':
                         logger.info(i)
                         cnt_ += 1
                     if cnt_ == 3:
