@@ -58,8 +58,9 @@ def main():
                     if idx == ind_token:
                         continue
                     closest_words.append((token, cos_[idx]))
-                logger.info('Closest words: ')
+                logger.info('Closest words: %s', closest_words)
                 closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)
+                logger.info('Closest list: %s', closest_list)
                 cnt_ = 0
                 for i in closest_list:
                     # if i[0] != '[SEP]' and i[0] != 'a' and i[0] != 'the' and i[0] != '.':
