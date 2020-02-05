@@ -22,7 +22,7 @@ def main():
         open('/mnt/nfs/work1/mfiterau/brawat/bionlp/sparsification/sparsification/outputs_b.pkl', 'rb'))
 
     input = torch.tensor(outputs[0])
-    labels = outputs[1]
+    labels = ['entailment' for x in range(8)]+['contradiction' for x in range(8)]+['neutral' for x in range(7)]
     sparse_embeds = torch.tensor(outputs[2])
 
     import ipdb; ipdb.set_trace()
