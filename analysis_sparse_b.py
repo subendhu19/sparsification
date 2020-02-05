@@ -25,7 +25,7 @@ def main():
     labels = ['entailment' for x in range(8)]+['contradiction' for x in range(8)]+['neutral' for x in range(7)]
     sparse_embeds = torch.tensor(outputs[2])
 
-    import ipdb; ipdb.set_trace()
+    # import ipdb; ipdb.set_trace()
 
     for ind, inp in enumerate(input):
         tmp_tokens = [tokenizer._convert_id_to_token(x) for x in inp.tolist()]
