@@ -46,9 +46,10 @@ def main():
         logger.info('Dimensions with same val: %s', len(cnt))
         # logger.info('Dimensions with same val: ', np.sum(cnt)/len(cls_embed.tolist()))
 
-        closest_words = []
+
         cos_all = cosine_similarity(tmp_embeds)
         for ind_token, curr_token in enumerate(tmp_tokens):
+            closest_words = []
             if curr_token != 'a' and curr_token != 'the' and curr_token != '.':
                 logger.info('---')
                 logger.info('Inspected Token: %s', curr_token)
