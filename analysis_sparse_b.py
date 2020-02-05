@@ -58,11 +58,10 @@ def main():
                     continue
                 closest_words.append((token, cos_[idx]))
             logger.info('Closest words: ')
-            closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)[:5]
+            closest_list = sorted(closest_words, key=lambda x: x[1], reverse=True)[:6]
             for i in closest_list:
-
                 if i[0] != '[SEP]' and i[0] != 'a' and i[0] != 'the':
-                    logger.info(i[0])
+                    logger.info(i)
 
 
 if __name__ == "__main__":
