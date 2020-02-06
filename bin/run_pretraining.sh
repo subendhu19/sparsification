@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 #
 #SBATCH --job-name=sb_pretraining
-#SBATCH --output=sparse_bert_pretraining.txt
-#SBATCH --time=0-01:00
+
+#SBATCH -o /home/srongali/Projects/sparsification/logs/sparse_bert_pretraining_%A_%a.out
+#SBATCH -e /home/srongali/Projects/sparsification/logs/sparse_bert_pretraining_%A_%a.err
+
+#SBATCH --time=5-00:00
 
 python run_pretraining.py \
-    --output_dir=/mnt/nfs/scratch1/srongali/sparsification/pretrained_ckpts/sparse-bert \
-    --model_type=sp-bert \
+    --output_dir=/mnt/nfs/scratch1/srongali/sparsification/pretrained_ckpts/config_${SLURM_ARRAY_TASK_ID} \
+    --sparse_config=${SLURM_ARRAY_TASK_ID}\
     --model_name_or_path=bert-base-uncased \
     --do_train \
     --do_lower_case \

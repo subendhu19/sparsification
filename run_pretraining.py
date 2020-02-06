@@ -592,11 +592,13 @@ def main():
                         help="The output directory where the model predictions and checkpoints will be written.")
 
     # Sparsity parameters
+    parser.add_argument("--sparse_config", default=-1, type=int,
+                        help="Predefined sparsity configuration if any.")
     parser.add_argument("--model_type", default="sp-bert", type=str,
                         help="The model architecture to be fine-tuned (sp-bert or sp-bert-hidden).")
     parser.add_argument("--sparsity_frac", default=5e-2, type=float,
                         help="The desired sparsity fraction.")
-    parser.add_argument("--sparsity_imp", default=.1, type=float,
+    parser.add_argument("--sparsity_imp", default=1, type=float,
                         help="The coefficient for the sparsity loss.")
     parser.add_argument("--sparse_size", default=1500, type=int,
                         help="The size of the sparse vector if required.")
@@ -684,6 +686,14 @@ def main():
     parser.add_argument('--server_ip', type=str, default='', help="For distant debugging.")
     parser.add_argument('--server_port', type=str, default='', help="For distant debugging.")
     args = parser.parse_args()
+
+    pre_configs = [{'sparsity_imp': 1, 'model_type': 'sp-bert'},
+                   {'sparsity_imp': 10, 'model_type': 'sp-bert'},
+                   {'sparsity_imp': 1, 'model_type': 'sp-bert-hidden'},
+                   {'sparsity_imp': 10, 'model_type': 'sp-bert-hidden'}]
+    if args.sparse_config != -1:
+        args.sparsity_imp = pre_configs[args.sparse_config - 1]['sparsity_imp']
+        args.model_type = pre_configs[args.sparse_config - 1]['model_type']
 
     if not args.mlm:
         raise ValueError("BERT and RoBERTa do not have LM heads but masked LM heads. They must be run using the --mlm "
