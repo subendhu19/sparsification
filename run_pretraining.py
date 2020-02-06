@@ -81,7 +81,7 @@ class SparseBertConfig(BertConfig):
         self.sparsity_frac = None
         self.sparsity_imp = None
         self.sparse_size = None
-        self.sparse_noise_stf = None
+        self.sparse_noise_std = None
         self.sparse_net_params = None
         self.pred_input_size = None
 
@@ -748,7 +748,7 @@ def main():
     config.sparsity_frac = args.sparsity_frac
     config.sparsity_imp = args.sparsity_imp
     config.sparse_size = args.sparse_size
-    config.sparse_noise_stf = args.sparse_noise_std
+    config.sparse_noise_std = args.sparse_noise_std
     config.sparse_net_params = args.sparse_net_params
 
     if args.model_type == 'sp-bert':
