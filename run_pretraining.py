@@ -217,7 +217,7 @@ class SparseHiddenBertForMaskedLM(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.bert = BertModel(config)
-        self.cls = BertOnlyMLMHead(config)
+        self.spcls = BertOnlyMLMHead(config)
         self.init_weights()
 
         self.sparsity_frac = config.sparsity_frac
@@ -228,7 +228,7 @@ class SparseHiddenBertForMaskedLM(BertPreTrainedModel):
             self.sparse_net.load_state_dict(torch.load(config.sparse_net_params))
 
     def get_output_embeddings(self):
-        return self.cls.predictions.decoder
+        return self.spcls.predictions.decoder
 
     def forward(
         self,
@@ -266,7 +266,7 @@ class SparseHiddenBertForMaskedLM(BertPreTrainedModel):
             sparse_outputs * (1 - sparse_outputs))
 
         sequence_output = sparse_outputs.reshape(osize[0], osize[1], -1)
-        prediction_scores = self.cls(sequence_output)
+        prediction_scores = self.spcls(sequence_output)
 
         outputs = (prediction_scores,) + outputs[2:]  # Add hidden states and attention if they are here
 
