@@ -10,9 +10,9 @@ python run_pretraining.py \
     --model_name_or_path=bert-base-uncased \
     --do_train \
     --do_lower_case \
-    --train_data_file=/mnt/nfs/scratch1/abhyuday/data/cl/wiki.shuf.sample.txt \
+    --train_data_file=/mnt/nfs/scratch1/srongali/wikitext/wiki.shuf.train.txt \
     --do_eval \
-    --eval_data_file=/mnt/nfs/scratch1/abhyuday/data/cl/wiki.shuf.sample.txt \
+    --eval_data_file=/mnt/nfs/scratch1/srongali/wikitext/wiki.shuf.valid.txt \
     --evaluate_during_training \
     --logging_steps=25000 \
     --save_steps=25000 \
