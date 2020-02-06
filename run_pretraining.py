@@ -256,7 +256,7 @@ class SparseHiddenBertForMaskedLM(BertPreTrainedModel):
         )
 
         osize = outputs[0].size()
-        all_outputs = outputs[0].reshape(osize[0] * osize[1], self.hidden_size)
+        all_outputs = outputs[0].reshape(osize[0] * osize[1], -1)
         rec_outputs, sparse_outputs = self.sparse_net(all_outputs)
 
         loss_recon = MSELoss()
