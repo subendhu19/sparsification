@@ -766,6 +766,8 @@ def main():
                                         from_tf=bool('.ckpt' in args.model_name_or_path),
                                         config=config,
                                         cache_dir=args.cache_dir if args.cache_dir else None)
+    if args.model_type == 'sp-bert-hidden':
+        model.spcls = BertOnlyMLMHead(config)
     model.to(args.device)
 
     if args.local_rank == 0:
