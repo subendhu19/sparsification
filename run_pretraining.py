@@ -227,6 +227,18 @@ class SparseHiddenBertForMaskedLM(BertPreTrainedModel):
         if config.sparse_net_params:
             self.sparse_net.load_state_dict(torch.load(config.sparse_net_params))
 
+    def resize_token_embeddings(self, new_num_tokens=None):
+        base_model = getattr(self, self.base_model_prefix, self)  # get the base model if needed
+        model_embeds = base_model._resize_token_embeddings(new_num_tokens)
+        if new_num_tokens is None:
+            return model_embeds
+
+        # Update base model and current model config
+        self.config.vocab_size = new_num_tokens
+        base_model.vocab_size = new_num_tokens
+
+        return model_embeds
+
     def get_output_embeddings(self):
         return self.spcls.predictions.decoder
 
